@@ -6,8 +6,10 @@
   // Project code: https://ru-ikt.ru/reestrpo
   project_code: "12.17",
 
-  individual_part_ru: ". Подсистема платформы и задач",
-  individual_part_en: ". Platform and Tasks Subsystem",
+  individual_part_ru: ". Подсистема пользователей, задач и учебных планов",
+  individual_part_en: ". Users, Tasks, and Learning Plans Subsystem",
+  individual_materials_part_ru: ". Подсистема материалов и рецензирования",
+  individual_materials_part_en: ". Learning Materials and Peer Review Subsystem",
 
   // Students
   authors: (

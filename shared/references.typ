@@ -41,15 +41,79 @@
 
 #let sources = (standards + web-sources).sorted(key: source-sort-key)
 
-#let cite(..keys) = {
+#let individual-source-keys = (
+  "gost-19-101",
+  "gost-19-102",
+  "gost-19-103",
+  "gost-19-104",
+  "gost-19-105",
+  "gost-19-106",
+  "gost",
+  "gost-19-301",
+  "gost-19-404",
+  "gost-19-505",
+  "gost-19-603",
+  "gost-19-604",
+  "docker-compose",
+  "docker-engine",
+  "go-docs",
+  "graphql-spec",
+  "postgres-docs",
+  "react-docs",
+  "ts-docs",
+  "stepik-docs",
+  "moodle-docs",
+  "exercism-docs",
+  "ai-study",
+)
+
+#let materials-source-keys = (
+  "gost-19-101",
+  "gost-19-102",
+  "gost-19-103",
+  "gost-19-104",
+  "gost-19-105",
+  "gost-19-106",
+  "gost",
+  "gost-19-301",
+  "gost-19-404",
+  "gost-19-505",
+  "gost-19-603",
+  "gost-19-604",
+  "docker-compose",
+  "docker-engine",
+  "go-docs",
+  "graphql-spec",
+  "postgres-docs",
+  "react-docs",
+  "ts-docs",
+  "stepik-docs",
+  "moodle-docs",
+  "gh",
+)
+
+#let sources-for(scope) = if scope == "individual" {
+  sources.filter(source => individual-source-keys.contains(source.key))
+} else if scope == "materials" {
+  sources.filter(source => materials-source-keys.contains(source.key))
+} else {
+  sources
+}
+
+#let cite-for(scope, ..keys) = {
+  let selected = sources-for(scope)
   let unique = keys.pos().dedup()
-  let ordered = unique.sorted(key: key => sources.position(source => source.key == key))
+  let ordered = unique.sorted(key: key => selected.position(source => source.key == key))
   let numbers = ordered.map(key => {
-    let number = sources.position(source => source.key == key) + 1
+    let number = selected.position(source => source.key == key) + 1
     link(label("source-" + key), str(number))
   })
   text(size: 9pt)[\[#numbers.join([, ])\]]
 }
+
+#let cite(..keys) = cite-for("common", ..keys)
+#let individual-cite(..keys) = cite-for("individual", ..keys)
+#let materials-cite(..keys) = cite-for("materials", ..keys)
 
 #let bibliography-entry(source) = {
   if source.at("details", default: none) != none {
@@ -59,10 +123,11 @@
   }
 }
 
-#let bibliography() = {
+#let bibliography(scope: "common") = {
+  let selected = sources-for(scope)
   set par(first-line-indent: 0pt, justify: false, leading: 0.5em)
   set text(size: 10.5pt)
-  enum(..sources.map(source => [#bibliography-entry(source)#label("source-" + source.key)]))
+  enum(..selected.map(source => [#bibliography-entry(source)#label("source-" + source.key)]))
 }
 
 #let analogs = (
@@ -90,6 +155,69 @@
         table.cell(fill: rgb("#d9eaf7"), align: center + horizon)[*Ссылка*],
       ),
       ..analogs.map(analog => (
+        [#analog.name],
+        [#analog.role],
+        [#link(analog.url)[#analog.url]],
+      )).flatten(),
+    )
+  ]
+  parbreak()
+  [Дата обращения: #accessed.]
+}
+
+#let individual-analogs = analogs.filter(analog => (
+  "Stepik",
+  "Moodle",
+  "Exercism",
+  "ChatGPT Study mode",
+).contains(analog.name))
+
+#let individual-analog-appendix() = {
+  pagebreak(weak: true)
+  heading(numbering: none, outlined: true)[ПРИЛОЖЕНИЕ А. ССЫЛКИ НА АНАЛОГИ]
+  set par(first-line-indent: 0pt)
+  text(size: 10pt)[
+    #table(
+      columns: (1.2fr, 2fr, 2.8fr),
+      stroke: 0.5pt + rgb("#a6a6a6"),
+      inset: 5pt,
+      table.header(
+        table.cell(fill: rgb("#d9eaf7"), align: center + horizon)[*Аналог*],
+        table.cell(fill: rgb("#d9eaf7"), align: center + horizon)[*Роль в сравнении*],
+        table.cell(fill: rgb("#d9eaf7"), align: center + horizon)[*Ссылка*],
+      ),
+      ..individual-analogs.map(analog => (
+        [#analog.name],
+        [#analog.role],
+        [#link(analog.url)[#analog.url]],
+      )).flatten(),
+    )
+  ]
+  parbreak()
+  [Дата обращения: #accessed.]
+}
+
+#let materials-analogs = analogs.filter(analog => (
+  "Stepik",
+  "Moodle",
+  "GitHub",
+).contains(analog.name))
+
+#let materials-analog-appendix() = {
+  pagebreak(weak: true)
+  heading(numbering: none, outlined: true)[ПРИЛОЖЕНИЕ А. ССЫЛКИ НА АНАЛОГИ]
+  set par(first-line-indent: 0pt)
+  text(size: 10pt)[
+    #table(
+      columns: (1.2fr, 2fr, 2.8fr),
+      stroke: 0.5pt + rgb("#a6a6a6"),
+      inset: 5pt,
+      table.header(
+        table.cell(fill: rgb("#d9eaf7"), align: center + horizon)[*Аналог*],
+        table.cell(fill: rgb("#d9eaf7"), align: center + horizon)[*Роль в сравнении*],
+        table.cell(fill: rgb("#d9eaf7"), align: center + horizon)[*Ссылка*],
+      ),
+      ..materials-analogs.map(analog => (
         [#analog.name],
         [#analog.role],
         [#link(analog.url)[#analog.url]],
