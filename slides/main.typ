@@ -1,4 +1,4 @@
-#import "../shared/data.typ": *
+#import "../data/data.typ": *
 #import "../shared/references.typ": cite, sources
 #let blue = rgb("16366b")
 #set document(title: project + ". Защита темы ВКР", author: "Васюков Александр Владимирович")

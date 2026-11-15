@@ -1,69 +1,432 @@
-// Адаптировано из TZGeneration (MIT), commit c6abbd686903098871e3f8189a84e94ba172b8d1.
-// Убраны боковые штампы; оформление сверено с титульным листом ВКР из LMS.
-#import "data.typ": *
-#let doc-template(title: project, code: common-code, people: authors, annotation: [], body) = {
-  set document(title: title + ". Проект технического задания", author: people.map(p => p.name))
-  set text(font: "Times New Roman", size: 12pt, lang: "ru", hyphenate: true)
-  set page(paper: "a4", margin: (left: 25mm, right: 15mm, top: 25mm, bottom: 20mm))
-  set par(justify: true, leading: 0.65em, first-line-indent: 1.25cm, spacing: 0.65em)
-  set heading(numbering: "1.1")
-  set list(indent: 1.25cm, body-indent: 0.5em, spacing: 0.45em)
-  set enum(indent: 1.25cm, body-indent: 0.5em, spacing: 0.45em)
-  show heading.where(level: 1): it => {
-    pagebreak(weak: true)
-    block(above: 0pt, below: 1em)[#align(center)[#text(size: 13pt, weight: "bold")[#if it.numbering != none {counter(heading).display()} #upper(it.body)]]]
-  }
-  show heading.where(level: 2): it => block(above: 1.1em, below: 0.7em)[#text(weight: "bold")[#counter(heading).display() #it.body]]
-  show heading.where(level: 3): it => block(above: 0.8em, below: 0.5em)[#text(weight: "bold")[#counter(heading).display() #it.body]]
-  show table: set par(first-line-indent: 0pt, leading: 0.35em, spacing: 0.4em, justify: false)
-  set table(stroke: 0.5pt, inset: 5pt)
-  page(header: none, footer: none)[
-    #set par(first-line-indent: 0pt, justify: false, leading: 0.35em)
-    #align(center)[
-      ПРАВИТЕЛЬСТВО РОССИЙСКОЙ ФЕДЕРАЦИИ\
-      ФЕДЕРАЛЬНОЕ ГОСУДАРСТВЕННОЕ АВТОНОМНОЕ\
-      ОБРАЗОВАТЕЛЬНОЕ УЧРЕЖДЕНИЕ ВЫСШЕГО ОБРАЗОВАНИЯ\
-      НАЦИОНАЛЬНЫЙ ИССЛЕДОВАТЕЛЬСКИЙ УНИВЕРСИТЕТ\
-      «ВЫСШАЯ ШКОЛА ЭКОНОМИКИ»
-      #v(3mm)
-      Факультет компьютерных наук\
-      Образовательная программа бакалавриата «Программная инженерия»
-    ]
-    #v(8mm)
-    #grid(columns: (1fr, 1fr), gutter: 12mm,
-      [СОГЛАСОВАНО\ #supervisor-position\ #v(5mm) \_\_\_\_\_\_\_\_\_ #supervisor\ «\_\_\_» \_\_\_\_\_\_\_\_\_ 2026 г.],
-      [УТВЕРЖДАЮ\ Академический руководитель образовательной программы «Программная инженерия», старший преподаватель департамента программной инженерии\ #v(3mm) \_\_\_\_\_\_\_\_\_ Н. А. Павлочев\ «\_\_\_» \_\_\_\_\_\_\_\_\_ 2026 г.])
-    #v(1fr)
-    #align(center)[#text(size: 14pt, weight: "bold", title)\ #v(5mm) Техническое задание\ ЛИСТ УТВЕРЖДЕНИЯ\ #(code + "-ЛУ")\ #v(3mm) Проект к защите темы ВКР]
-    #v(1fr)
-    #align(right)[Исполнители:\ #for p in people [Студент группы #p.group\ \_\_\_\_\_\_\_\_\_ / #p.short /\ ] «\_\_\_» \_\_\_\_\_\_\_\_\_ 2026 г.]
-    #v(1fr)
-    #align(center)[Москва 2026]
-  ]
-  counter(page).update(1)
-  page(header: none, footer: none)[
-    #set par(first-line-indent: 0pt, justify: false)
-    УТВЕРЖДЕН\ #(code + "-ЛУ")
-    #v(1fr)
-    #align(center)[#text(size: 14pt, weight: "bold", title)\ #v(8mm) Техническое задание\ #code\ #v(5mm) Проект к защите темы ВКР\ Листов #context counter(page).final().first()]
-    #v(1fr)
-    #align(center)[Москва 2026]
-  ]
-  set page(header: align(center)[#context counter(page).display()\ #text(size: 10pt, code)], footer: none)
-  heading(numbering: none)[Аннотация]
-  annotation
-  heading(numbering: none, outlined: false)[Содержание]
-  outline(title: none, depth: 2, indent: 1em)
-  body
-  heading(numbering: none)[Лист регистрации изменений]
-  {
-    set text(size: 9pt)
-    table(columns: (9mm, 17mm, 17mm, 14mm, 19mm, 16mm, 20mm, 19mm, 12mm, 12mm),
-      table.header([Изм.], [Изменён-
-ные листы], [Заменён-
-ные листы], [Новые листы], [Аннулиро-
-ванные листы], [Всего листов], [№ документа], [Входящий № и дата], [Подп.], [Дата]),
-      ..range(100).map(i => [#v(6mm)]))
-  }
+#import "references.typ": *
+
+#let template(cfg: none, body) = {
+    assert(cfg != none)
+    assert(cfg.project != none)
+    assert(cfg.project.code != none)
+    assert(cfg.project.name != none)
+    assert(cfg.students != none)
+    assert(cfg.agreed_by.name != none)
+    assert(cfg.agreed_by.position != none)
+    assert(cfg.approved_by.name != none)
+    assert(cfg.approved_by.position != none)
+    assert(cfg.university_name != none)
+    assert(cfg.faculty_name != none)
+    assert(cfg.edu_program_name != none)
+    assert(cfg.year != none)
+    assert(cfg.city != none)
+
+    let un(n) = "_" * n
+
+    let approval_page_code = cfg.project.code + "-ЛУ"
+
+    // Отметка об учёте и хранении по ГОСТ 19.601-78
+    let storage_table = {
+        set text(size: 10pt)
+        place(
+            bottom + left,
+            dx: 5mm,
+            dy: -10mm,
+            rotate(
+                -90deg,
+                reflow: true,
+                table(
+                    columns: (25mm, 35mm, 25mm, 25mm, 35mm),
+                    rows: (5mm, 7mm),
+                    align: center,
+                    [Инв.№ подп], [Подп. и дата], [Взам. инв.№], [Инв.№ дубл.], [Подп. и дата]
+                )
+            )
+        )
+    }
+
+    // Лист утверждения
+    let approval_page = {
+        let top_banner = [
+            #set par(spacing: 0.65em)
+
+            #text(weight: "bold", cfg.university_name)
+
+            #cfg.faculty_name
+
+            #cfg.edu_program_name
+        ]
+
+        let approve_table = grid(
+            columns: (1fr, 1fr),
+            inset: (
+                x: 10mm,
+                y: 3mm,
+            ),
+            align: center,
+
+            [
+                СОГЛАСОВАНО
+
+                #cfg.agreed_by.position
+            ],
+            [
+                УТВЕРЖДЕНО
+
+                #cfg.approved_by.position
+            ],
+
+            box[
+                #un(13) #cfg.agreed_by.name
+
+                "#un(3)" #un(13) #cfg.year г.
+            ],
+            [
+                #un(13) #cfg.approved_by.name
+
+                "#un(3)" #un(13) #cfg.year г.
+            ]
+        )
+
+        let center_banner = [
+            #set text(size: 14pt, weight: "bold")
+            #set par(spacing: 2em)
+
+            #par(spacing: 0.65em, cfg.project.name)
+
+            Техническое задание
+
+            ЛИСТ УТВЕРЖДЕНИЯ
+
+            #approval_page_code
+        ]
+
+        let student_info = align(right)[
+            #set par(spacing: 1em)
+
+            Исполнители:
+
+            #cfg.students.map(
+              student => [
+                Студент группы #student.group
+
+                #un(13) / #student.short /
+    
+                "#un(3)" #un(15) #cfg.year г.
+              ]
+            ).join[#linebreak() #linebreak()]
+        ]
+
+        let bottom_banner = [
+            #set text(weight: "bold")
+
+            #cfg.city #cfg.year
+        ]
+
+        page(
+            header: none,
+            footer: none,
+            margin: (
+                left: 20mm,
+                right: 10mm,
+                top: 25mm,
+                bottom: 15mm,
+            ),
+            foreground: storage_table
+        )[
+            #set align(center)
+
+            #grid(
+                columns: (1fr),
+                row-gutter: 1fr,
+                top_banner,
+                approve_table,
+                center_banner,
+                student_info,
+                bottom_banner,
+            )
+        ]
+
+        counter(page).update(1)
+    }
+
+    let title_page = {
+        let top_banner = [
+            #set align(left)
+            #set par(spacing: 2em)
+
+            УТВЕРЖДЕН
+
+            #approval_page_code
+        ]
+
+        let center_banner = [
+            #set text(size: 14pt, weight: "bold")
+            #set par(spacing: 2em)
+
+            #par(spacing: 0.65em, cfg.project.name)
+
+            Техническое задание
+
+            #cfg.project.code
+
+            Листов #context {counter(page).final().at(0)}
+        ]
+
+        let bottom_banner = [
+            #set text(weight: "bold")
+
+            #cfg.year
+        ]
+
+        page(
+            header: none,
+            footer: none,
+            margin: (
+                left: 20mm,
+                right: 10mm,
+                top: 25mm,
+                bottom: 15mm,
+            ),
+            foreground: storage_table
+        )[
+            #set align(center)
+
+            #grid(
+                columns: (1fr),
+                row-gutter: 1fr,
+                top_banner,
+                center_banner,
+                bottom_banner,
+            )
+        ]
+    }
+
+    let list_registraion_changes = {
+
+        let list_name = [
+            #set text(size: 14pt, weight: "bold")
+            #set par(spacing: 2em)
+            ЛИСТ РЕГИСТРАЦИИ ИЗМЕНЕНИЙ
+        ]
+
+        let changes_table = figure(
+            table(
+                columns: (10mm,) + (15mm, ) * 4 + (20mm, ) * 2 + (auto, ) + (auto, ) * 2,
+                
+                rows: (auto, ) * 3 + (9.5mm, ) * 21,
+
+                table.cell(
+                colspan: 10,
+                align: horizon,
+                [Лист регистрации изменений]
+                ), 
+                table.cell(
+                colspan: 5,
+                align: horizon,
+                [Номера листов (страниц)]
+                ),
+
+                table.cell(
+                rowspan: 2,
+                align: horizon,
+                [Всего листов (страниц в докум.)],
+                ),
+                table.cell(
+                rowspan: 2,
+                align: horizon,
+                [№ документа],
+                ),
+                table.cell(
+                rowspan: 2,
+                align: horizon,
+                [Входящий № сопроводительного докум. и дата],
+                ),
+                table.cell(
+                rowspan: 2,
+                align: horizon,
+                [Подп.],
+                ),
+                table.cell(
+                rowspan: 2,
+                align: horizon,
+                [Дата],
+                ),
+
+                table.cell(
+                align: horizon,
+                rotate(-90deg, reflow: true)[
+                    Изм.
+                ],
+                ),
+                table.cell(
+                align: horizon,
+                rotate(-90deg, reflow: true)[
+                    Измененных
+                ],
+                ),
+                table.cell(
+                align: horizon,
+                rotate(-90deg, reflow: true)[
+                    Замененных
+                ],
+                ),
+                table.cell(
+                align: horizon,
+                rotate(-90deg, reflow: true)[
+                    Новых
+                ],
+                ),
+                table.cell(
+                align: horizon,
+                rotate(-90deg, reflow: true)[
+                    Аннулированных
+                ],
+                ),
+            )
+        )
+
+        page(
+            header: none,
+            footer: none,
+            margin: (
+                left: 20mm,
+                right: 10mm,
+                top: 25mm,
+                bottom: 15mm,
+            ),
+        )[
+            #set align(center)
+
+            #grid(
+                columns: (1fr),
+                row-gutter: 1fr,
+                list_name, 
+                changes_table,
+            )
+        ]
+    }
+
+    let outline = {
+        pagebreak(weak: true)
+
+        {
+            set align(center)
+            set text(weight: "bold")
+
+            [СОДЕРЖАНИЕ]
+        }
+
+        outline(
+            title: none,
+            indent: 5mm,
+        )
+    }
+
+    let outline_and_normal_pages = {
+        set page(
+            margin: (
+                top: 25mm,
+                left: 20mm,
+                right: 10mm,
+                bottom: 47mm,
+            ),
+            header: [
+                #set align(center)
+                #set text(weight: "bold")
+
+                #context counter(page).display()
+
+                #cfg.project.code
+            ],
+            footer: [
+                #table(
+                    columns: (2fr, 1fr, 1fr, 1fr, 1fr),
+                    align: center,
+                    rows: 7mm,
+
+                    [],           [],             [],             [],             [],
+                    [Изм.],           [Лист],         [№ докум.],     [Подп.],        [Дата],
+                    cfg.project.code, [],             [],             [],             [],
+                    [Инв. № подл.],   [Подп. и дата], [Взам. Инв. №], [Инв. № дубл.], [Подп. и дата],
+                )
+            ]
+        )
+
+        set par(
+            first-line-indent: (
+                amount: 2em,
+                all: true,
+            ),
+            justify: true,
+            spacing: 0.65em,
+            leading: 0.65em,
+        )
+
+        // List style
+        set list(
+            indent: 2em,
+            spacing: 0.65em,
+            marker: "-"
+        )
+
+        // Enumerated list style
+        set enum(
+            indent: 2em,
+            spacing: 0.65em,
+        )
+
+        set heading(numbering: "1.")
+
+        show heading.where(level: 1): h => {
+            set align(center)
+            set text(
+                weight: "bold", 
+                size: 12pt,
+            )
+
+            pagebreak(weak: true)
+            if h.numbering != none [
+                #counter(heading).display(h.numbering) #h.body
+            ] else [
+                #h.body
+            ]
+
+        }
+
+        show heading.where(level: 2): h => {
+            set text(
+                weight: "bold", 
+                size: 12pt,
+            )
+
+            block(inset: (left: 1em))[#counter(heading).display() #h.body]
+        }
+        
+        show heading.where(level: 3): h => {
+            set text(weight: "bold", size: 12pt)
+
+            block(inset: (left: 3em))[#counter(heading).display() #h.body]
+        }
+
+        pagebreak(weak: true)
+        align(center, text(weight: "bold", size: 12pt, [АННОТАЦИЯ]))
+        cfg.annotation
+
+        outline
+
+        body
+
+        // Sources
+        heading(numbering: none)[#text(upper("Список использованных источников"))]
+        bibliography()
+    }
+
+    set text(
+        lang: "ru",
+        size: 12pt,
+        font: "Times New Roman"
+    )
+
+    approval_page
+    title_page
+    outline_and_normal_pages
+    list_registraion_changes
 }
+
 #let req(id, title, body) = block(breakable: false, above: 0.7em, below: 0.6em)[*#id. #title.* #body]
