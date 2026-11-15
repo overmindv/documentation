@@ -1,4 +1,9 @@
-// Добавить автоматическую сортировку по правилам оформления (по алфавту заглавий, авторов - уточнить)
+#let source-sort-key(source) = {
+  let title = lower(source.title).replace("ё", "е")
+  let group = if title.match(regex("^[а-я]")) != none { "0" } else { "1" }
+  group + title
+}
+
 #let sources = (
   (
     key: "ex-build", 
@@ -96,10 +101,10 @@
     owner: "Справочный центр Stepik", 
     url: "https://help.stepik.org/article/54796"
   ),
-)
+).sorted(key: source-sort-key)
 
 #let cite(..keys) = {
-  let nums = keys.pos().map(k => sources.position(s => s.key == k) + 1)
+  let nums = keys.pos().map(k => sources.position(s => s.key == k) + 1).dedup().sorted()
   [\[#nums.map(str).join(", ")\]]
 }
 
