@@ -36,12 +36,6 @@
     url: "https://docs.github.com/en/pull-requests/how-tos/review-pull-requests/reviewing-proposed-changes-in-a-pull-request"
   ),
   (
-    key: "tzgen", 
-    title: "TZGeneration", 
-    owner: "vasyukov1, репозиторий шаблона Typst", 
-    url: "https://github.com/vasyukov1/TZGeneration"
-  ),
-  (
     key: "ex-unlock", 
     title: "Unlocking Exercises", 
     owner: "Exercism", 
