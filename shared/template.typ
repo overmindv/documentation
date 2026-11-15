@@ -1,6 +1,6 @@
 #import "references.typ": *
 
-#let template(cfg: none, body) = {
+#let template(cfg: none, appendix: none, body) = {
     assert(cfg != none)
     assert(cfg.project != none)
     assert(cfg.project.code != none)
@@ -415,6 +415,10 @@
         // Sources
         heading(numbering: none)[#text(upper("Список использованных источников"))]
         bibliography()
+
+        if appendix != none {
+            appendix
+        }
     }
 
     set text(

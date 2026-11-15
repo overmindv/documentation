@@ -4,7 +4,7 @@
 
 
 // Content
-#show: body => template(cfg: cfg(), body)
+#show: body => template(cfg: cfg(), appendix: analog-appendix(), body)
 
 #include "sections/01-introduction.typ"
 #include "sections/02-purpose.typ"

@@ -4,7 +4,7 @@
   project_name_en: "Educational Platform with Peer-Reviewed Learning Materials and Adaptive Task Selection",
 
   // Project code: https://ru-ikt.ru/reestrpo
-  project_code: "",
+  project_code: "12.17",
 
   individual_part_ru: ". Подсистема платформы и задач",
   individual_part_en: ". Platform and Tasks Subsystem",
@@ -25,5 +25,5 @@
 
   // Supervisor and his position
   supervisor: "Л. Д. Немировский",
-  supervisor_position: ""
+  supervisor_position: "Приглашенный преподаватель"
 )
