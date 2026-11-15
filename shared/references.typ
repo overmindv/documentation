@@ -34,7 +34,7 @@
 )
 
 #let source-sort-key(source) = {
-  let title = lower(source.title).replace("ё", "е")
+  let title = lower(source.title).replace("е", "е")
   let group = if title.match(regex("^[а-я]")) != none { "0" } else { "1" }
   group + title
 }

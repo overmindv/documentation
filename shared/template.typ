@@ -20,7 +20,7 @@
 
     let approval_page_code = cfg.project.code + "-ЛУ"
 
-    // Отметка об учёте и хранении по ГОСТ 19.601-78
+    // Отметка об учете и хранении по ГОСТ 19.601-78
     let storage_table = {
         set text(size: 10pt)
         place(
